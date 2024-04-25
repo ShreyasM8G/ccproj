@@ -1,0 +1,96 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build') {
+            steps {
+                script {
+                    // Determine which microservice to build based on a parameter
+                    switch (params.MICROSERVICE) {
+                        case 'auth':
+                            // Build auth microservice
+                            sh 'docker build -t auth-login:latest -f app/api/auth/login/Dockerfile .'
+                            break
+                        case 'products-id':
+                            // Build products-id microservice
+                            sh 'docker build -t products-id:latest -f app/api/products/[id]/Dockerfile .'
+                            break
+                        case 'products-user':
+                            // Build products-user microservice
+                            sh 'docker build -t products-user:latest -f app/api/products/user/Dockerfile .'
+                            break
+                        case 'user':
+                            // Build user microservice
+                            sh 'docker build -t user:latest -f app/api/User/[id]/Dockerfile .'
+                            break
+                        default:
+                            echo "Invalid MICROSERVICE parameter value"
+                    }
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                script {
+                    // Determine which microservice to test based on a parameter
+                    switch (params.MICROSERVICE) {
+                        case 'auth':
+                            // Run tests for auth microservice
+                            sh 'npm run test'
+                            break
+                        case 'products-id':
+                        case 'products-user':
+                            // Run tests for products microservices
+                            sh 'npm run test'
+                            break
+                        case 'user':
+                            // Run tests for user microservice
+                            sh 'npm run test'
+                            break
+                        default:
+                            echo "Invalid MICROSERVICE parameter value"
+                    }
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                script {
+                    // Determine which microservice to deploy based on a parameter
+                    switch (params.MICROSERVICE) {
+                        case 'auth':
+                            // Deploy auth microservice
+                            sh 'kubectl apply -f kubernetes/auth/auth-deployment.yaml'
+                            sh 'kubectl apply -f kubernetes/auth/auth-service.yaml'
+                            break
+                        case 'products-id':
+                            // Deploy products-id microservice
+                            sh 'kubectl apply -f kubernetes/products/[id]/products-id-deployment.yaml'
+                            sh 'kubectl apply -f kubernetes/products/[id]/products-id-service.yaml'
+                            break
+                        case 'products-user':
+                            // Deploy products-user microservice
+                            sh 'kubectl apply -f kubernetes/products/user/products-user-deployment.yaml'
+                            sh 'kubectl apply -f kubernetes/products/user/products-user-service.yaml'
+                            break
+                        case 'user':
+                            // Deploy user microservice
+                            sh 'kubectl apply -f kubernetes/User/User-deployment.yaml'
+                            sh 'kubectl apply -f kubernetes/User/User-service.yaml'
+                            break
+                        default:
+                            echo "Invalid MICROSERVICE parameter value"
+                    }
+                }
+            }
+        }
+    }
+}
