@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    parameters {
-        choice(name: 'MICROSERVICE', choices: ['auth', 'products-id', 'products-user', 'user'], description: 'Select microservice to build, test, and deploy')
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -15,7 +11,7 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    // Determine which microservice to build based on the parameter
+                    // Determine which microservice to build based on a parameter
                     switch (params.MICROSERVICE) {
                         case 'auth':
                             // Build auth microservice
@@ -43,13 +39,19 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    // Determine which microservice to test based on the parameter
+                    // Determine which microservice to test based on a parameter
                     switch (params.MICROSERVICE) {
                         case 'auth':
+                            // Run tests for auth microservice
+                            sh 'npm run test'
+                            break
                         case 'products-id':
                         case 'products-user':
+                            // Run tests for products microservices
+                            sh 'npm run test'
+                            break
                         case 'user':
-                            // Run tests for the selected microservice
+                            // Run tests for user microservice
                             sh 'npm run test'
                             break
                         default:
@@ -62,7 +64,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // Determine which microservice to deploy based on the parameter
+                    // Determine which microservice to deploy based on a parameter
                     switch (params.MICROSERVICE) {
                         case 'auth':
                             // Deploy auth microservice
